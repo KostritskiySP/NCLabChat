@@ -1,0 +1,14 @@
+<map>
+  <entry>
+    <int>6667</int>
+    <string>localhost</string>
+  </entry>
+  <entry>
+    <int>6668</int>
+    <string>localhost</string>
+  </entry>
+  <entry>
+    <int>6669</int>
+    <string>localhost</string>
+  </entry>
+</map>
