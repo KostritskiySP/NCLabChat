@@ -104,10 +104,10 @@ public class ClientServiceThread extends Thread implements ServiceMessageSender 
             }
 
             System.out.println("Welcome " + userMessage.getFrom());
-            for (Message message : serverData.getChatHistory()){
-                xStream.toXML(message,outputStream);
-               // outputStream.writeObject(message);
-            }
+//            for (Message message : serverData.getChatHistory()){
+//                xStream.toXML(message,outputStream);
+//               // outputStream.writeObject(message);
+//            }
 //            for (String login : serverData.getUserList()) {
 //                System.out.println(login);
 //            }
