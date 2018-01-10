@@ -11,7 +11,7 @@ public interface ServerData {
 
     boolean addMessage(Message message);
 
-    boolean addLogin(String login);
+//    boolean addLogin(String login);
 
     ArrayList<String> getUserList();
 

@@ -1,10 +1,7 @@
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.io.xml.DomDriver;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
@@ -13,14 +10,14 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-public class Server implements ServerData, ServerMessageListener,ServerDisconnectionListener {
+public class Server implements ServerData, ServerMessageListener, ServerDisconnectionListener {
 
-    private ArrayList<String> loginList = new ArrayList<String>();
+    //   private ArrayList<String> loginList = new ArrayList<String>();
     private ArrayList<ClientServiceThread> clientServiceThreads = new ArrayList<ClientServiceThread>();
     private ArrayList<Message> chatHistory = new ArrayList<>();
-    private HashMap<String,String> registeredUsers = new HashMap<>();
-//    private ArrayList<Server> connectedServers = new ArrayList<>();
-    private HashMap<Integer,String> serversNetList = new HashMap<Integer,String>();
+    private HashMap<String, String> registeredUsers = new HashMap<>();
+    //    private ArrayList<Server> connectedServers = new ArrayList<>();
+    private HashMap<Integer, String> serversNetList = new HashMap<Integer, String>();
     private ArrayList<Socket> serverNetSockets = new ArrayList<>();
     private XStream xStream = new XStream(new DomDriver());
 
@@ -44,24 +41,25 @@ public class Server implements ServerData, ServerMessageListener,ServerDisconnec
 //            AL.add(new Message("111","1123123"));
 //            server.xStream.toXML(AL,new FileOutputStream(Config.CHAT_HISTORY_FILE,true));
             server.chatHistory = (ArrayList<Message>) server.xStream.fromXML(new FileInputStream(Config.CHAT_HISTORY_FILE));
-            server.registeredUsers = (HashMap<String,String>) server.xStream.fromXML(new FileInputStream(Config.REGISTERED_USERS_FILE));
+            server.registeredUsers = (HashMap<String, String>) server.xStream.fromXML(new FileInputStream(Config.REGISTERED_USERS_FILE));
             ServerSocket socketListener = new ServerSocket(Config.PORT);
             System.out.println("\nWaiting for a client...");
-            for(Map.Entry nearbyServer:server.serversNetList.entrySet()){
+            for (Map.Entry nearbyServer : server.serversNetList.entrySet()) {
                 try {
-                    Socket socket = new Socket(nearbyServer.getValue().toString(),(int)nearbyServer.getKey());
+                    Socket socket = new Socket(nearbyServer.getValue().toString(), (int) nearbyServer.getKey());
                     server.serverNetSockets.add(socket);
                 } catch (IOException e) {
                 }
             }
+            BufferedReader keyboard = new BufferedReader(new InputStreamReader(System.in));
             while (true) {
 //                Socket client = null;
 //                while (client == null) {
                 Socket client = socketListener.accept();
 //                }
 //                if(server.serversNetList.containsValue(client.getInetAddress()))
-                    //Запуск серверов
-                ClientServiceThread clientService =new ClientServiceThread(client, server);
+                //Запуск серверов
+                ClientServiceThread clientService = new ClientServiceThread(client, server);
 //                clientService.addClientDisconnectionListner(server implements ClientDisconnectionListner);
 //                clientService.addOnMessageListner(server implements ClientDisconnectionListner);
                 server.clientServiceThreads.add(clientService);
@@ -83,31 +81,36 @@ public class Server implements ServerData, ServerMessageListener,ServerDisconnec
 
     @Override
     public ArrayList<Message> getChatHistory() {
-        if(chatHistory.size()>=5)
-            return (ArrayList<Message>) chatHistory.subList(chatHistory.size()-5,chatHistory.size()-1);
+        if (chatHistory.size() >= 5)
+            return (ArrayList<Message>) chatHistory.subList(chatHistory.size() - 5, chatHistory.size() - 1);
         else return chatHistory;
     }
 
     @Override
     public boolean addMessage(Message message) {
-        boolean b=chatHistory.add(message);
+        boolean b = chatHistory.add(message);
         try {
-            xStream.toXML(chatHistory,new FileOutputStream(Config.CHAT_HISTORY_FILE,false));
+            xStream.toXML(chatHistory, new FileOutputStream(Config.CHAT_HISTORY_FILE, false));
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
         return b;
     }
 
-    @Override
-    public boolean addLogin(String login) {
-        if(loginList.add(login))
-            return true;
-        return  false;
-    }
+//    @Override
+//    public boolean addLogin(String login) {
+//        if(loginList.add(login))
+//            return true;
+//        return  false;
+//    }
 
     @Override
     public ArrayList<String> getUserList() {
+        ArrayList<String> loginList = new ArrayList<>();
+        for (ClientServiceThread clientThread : clientServiceThreads) {
+            if (clientThread.getName() != null)
+                loginList.add(clientThread.getName());
+        }
         return loginList;
     }
 
@@ -118,15 +121,20 @@ public class Server implements ServerData, ServerMessageListener,ServerDisconnec
 
 
     @Override
-    public void addRegisteredUser(String login,String password) {
-        registeredUsers.put(login,password);
+    public void addRegisteredUser(String login, String password) {
+        registeredUsers.put(login, password);
+        try {
+            xStream.toXML(registeredUsers, new FileOutputStream(Config.REGISTERED_USERS_FILE, false));
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
     public void broadcast(Message message) {
-        for(Socket socket: serverNetSockets){
+        for (Socket socket : serverNetSockets) {
             try {
-                xStream.toXML(message,socket.getOutputStream());
+                xStream.toXML(message, socket.getOutputStream());
             } catch (IOException e) {
                 Socket socketTemp;
                 Iterator<Socket> it = serverNetSockets.iterator();
@@ -137,13 +145,13 @@ public class Server implements ServerData, ServerMessageListener,ServerDisconnec
                 }
             }
         }
-        for(ClientServiceThread thread : clientServiceThreads) thread.sendMessage(message);
+        for (ClientServiceThread thread : clientServiceThreads) thread.sendMessage(message);
     }
 
     @Override
     public void clientDisconnected(ClientServiceThread clientServiceThread, String login) {
 //        String tempLogin;
-        loginList.remove(login);
+        //loginList.remove(login);
 //        Iterator<String> it = loginList.iterator();
 //        while (it.hasNext()) {
 //            tempLogin = it.next();

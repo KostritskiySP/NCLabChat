@@ -59,50 +59,58 @@ public class ClientServiceThread extends Thread implements ServiceMessageSender 
 
     }
 
+    public void authorization(){
+        while (true) {
+            userMessage = (Message)xStream.fromXML(inputStream);
+            //userMessage = (Message) inputStream.readObject();
+            System.out.println(userMessage.getMessage());
+            if (userMessage.getMessage().toUpperCase().equals("!AUTHORIZE"))
+            {
+                String Login;
+                String Password;
+                xStream.toXML(new Message(null, "#Enterlogin"),outputStream);
+//                    outputStream.writeObject(new Message(null, "#Enterlogin"));
+                userMessage = (Message)xStream.fromXML(inputStream);
+                //userMessage = (Message) inputStream.readObject();
+                Login = userMessage.getMessage();
+                if (!Login.equals("") || serverData.getRegisteredUsers().containsKey(Login)) {
+                    Login = userMessage.getMessage();
+                    xStream.toXML(new Message(null, "#Enterpassword"),outputStream);
+//                        outputStream.writeObject(new Message(null, "#Enterpassword"));
+                    userMessage = (Message)xStream.fromXML(inputStream);
+                    //userMessage = (Message) inputStream.readObject();
+                    if (!userMessage.getMessage().equals("")) {
+                        Password = userMessage.getMessage();
+                        if (serverData.getRegisteredUsers().get(Login).equals(Password)) {
+                            userMessage = new Message(Login,null);
+                            xStream.toXML(new Message(null, "#Success"),outputStream);
+//                                outputStream.writeObject(new Message(null, "#Success"));
+                            break;
+                        } else  xStream.toXML(new Message(null, "#passwordIncorrect"),outputStream);
+//                                outputStream.writeObject(new Message(null, "#passwordIncorrect"));
+                    }
+                } else xStream.toXML(new Message(null, "#notRegistered"),outputStream);
+//                        outputStream.writeObject(new Message(null, "#notRegistered"));
+            } else if (userMessage.getMessage().toUpperCase().equals("!REGISTRATION"))
+                try {
+                    registration();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (ClassNotFoundException e) {
+                    e.printStackTrace();
+                }
+            else xStream.toXML(new Message(null, "#authorizeFirst"), outputStream);
+//                    outputStream.writeObject(new Message(null, "#authorizeFirst"));
+        }
+    }
+
     public void run() {
         try {
 //            inputStream = xStream.createObjectInputStream(this.socket.getInputStream());
 //            outputStream = xStream.createObjectOutputStream(this.socket.getOutputStream());
             inputStream=socket.getInputStream();
             outputStream=socket.getOutputStream();
-            while (true) {
-                userMessage = (Message)xStream.fromXML(inputStream);
-                //userMessage = (Message) inputStream.readObject();
-                System.out.println(userMessage.getMessage());
-                if (userMessage.getMessage().toUpperCase().equals("!AUTHORIZE"))
-                {
-                    String Login;
-                    String Password;
-                    xStream.toXML(new Message(null, "#Enterlogin"),outputStream);
-//                    outputStream.writeObject(new Message(null, "#Enterlogin"));
-                    userMessage = (Message)xStream.fromXML(inputStream);
-                    //userMessage = (Message) inputStream.readObject();
-                    Login = userMessage.getMessage();
-                    if (!Login.equals("") || serverData.getRegisteredUsers().containsKey(Login)) {
-                        Login = userMessage.getMessage();
-                        xStream.toXML(new Message(null, "#Enterpassword"),outputStream);
-//                        outputStream.writeObject(new Message(null, "#Enterpassword"));
-                        userMessage = (Message)xStream.fromXML(inputStream);
-                        //userMessage = (Message) inputStream.readObject();
-                        if (!userMessage.getMessage().equals("")) {
-                            Password = userMessage.getMessage();
-                            if (serverData.getRegisteredUsers().get(Login).equals(Password)) {
-                                userMessage = new Message(Login,null);
-                                serverData.addLogin(Login);
-                                xStream.toXML(new Message(null, "#Success"),outputStream);
-//                                outputStream.writeObject(new Message(null, "#Success"));
-                                break;
-                            } else  xStream.toXML(new Message(null, "#passwordIncorrect"),outputStream);
-//                                outputStream.writeObject(new Message(null, "#passwordIncorrect"));
-                        }
-                    } else xStream.toXML(new Message(null, "#notRegistered"),outputStream);
-//                        outputStream.writeObject(new Message(null, "#notRegistered"));
-                }
-                else if (userMessage.getMessage().toUpperCase().equals("!REGISTRATION")) registration();
-                else xStream.toXML(new Message(null, "#authorizeFirst"),outputStream);
-//                    outputStream.writeObject(new Message(null, "#authorizeFirst"));
-            }
-
+            authorization();
             System.out.println("Welcome " + userMessage.getFrom());
             for (Message message : serverData.getChatHistory()){
                 xStream.toXML(message,outputStream);
@@ -118,8 +126,6 @@ public class ClientServiceThread extends Thread implements ServiceMessageSender 
             for (String login : serverData.getUserList()) {
                 System.out.println("Online:" + login);
             }
-            //System.out.println(serverData.getClientServiceThreads().getClientsList());
-            // this.broadcast(serverData.getClientServiceThreads().getClientsList(), this.userMessage);
 
             while (true) {
                 userMessage = (Message)xStream.fromXML(inputStream);
@@ -137,27 +143,18 @@ public class ClientServiceThread extends Thread implements ServiceMessageSender 
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        } finally {
+        }
+        finally {
             System.out.println(userMessage.getFrom() + " disconnected!");
             disconnectionListener.clientDisconnected(this,userMessage.getFrom());
-//            serverData.getClientServiceThreads().remove(this);
-            //serverData.getUserList().remove(login);
         }
 
     }
-//    public void broadcast(Message message) throws IOException {
-//            for (ClientInfo client : clientsArrayList) {
-//                client.getThisObjectOutputStream().writeObject(message);
-//            }
-//    }
 
     @Override
     public boolean sendMessage(Message message) {
         try {
             xStream.toXML(message,outputStream);
-//            outputStream.writeObject(message);
         } catch (XStreamException e) {
             System.out.println(userMessage.getFrom() + " disconnected!");
             disconnectionListener.clientDisconnected(this,userMessage.getFrom());
