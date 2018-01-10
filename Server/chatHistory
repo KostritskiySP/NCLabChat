@@ -24,11 +24,20 @@
     <message>sa</message>
   </Message>
   <Message>
+<<<<<<< HEAD
     <from>rtrt</from>
     <message>123</message>
   </Message>
   <Message>
     <from>rtrt</from>
     <message>e</message>
+=======
+    <from>4</from>
+    <message>123</message>
+  </Message>
+  <Message>
+    <from>4</from>
+    <message>42</message>
+>>>>>>> Branch_Sergey
   </Message>
 </list>

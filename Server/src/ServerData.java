@@ -1,21 +1,21 @@
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * Created by shado_000 on 14.12.2017.
  */
 public interface ServerData {
-//    ArrayList<ClientServiceThread> getClientServiceThreads();
 
-    ArrayList<Message> getChatHistory();
+    List<Message> getChatHistory();
 
-    boolean addMessage(Message message);
+    /**
+     * returns a list of currently online users
+     */
+    ArrayList<String> getOnlineUsers();
 
-    boolean addLogin(String login);
 
-    ArrayList<String> getUserList();
+    String registration(Account account);
 
-    HashMap<String,String> getRegisteredUsers();
-
-    void addRegisteredUser(String login,String password);
+    String authorization(Account account);
 }
