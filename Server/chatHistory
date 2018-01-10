@@ -23,4 +23,12 @@
     <from>qwe</from>
     <message>sa</message>
   </Message>
+  <Message>
+    <from>4</from>
+    <message>123</message>
+  </Message>
+  <Message>
+    <from>4</from>
+    <message>42</message>
+  </Message>
 </list>

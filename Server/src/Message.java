@@ -5,10 +5,13 @@ public class Message implements Serializable {
 
     private String from;
     private String message;
-    //private String[] users;
 
-    public Message(String from, String message){
+    public Message(String from, String message) {
         this.from = from;
+        this.message = message;
+    }
+
+    public void setMessage(String message) {
         this.message = message;
     }
 
