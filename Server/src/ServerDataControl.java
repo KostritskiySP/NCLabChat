@@ -5,7 +5,7 @@ import java.util.List;
 /**
  * Created by shado_000 on 14.12.2017.
  */
-public interface ServerData {
+public interface ServerDataControl {
 
     List<Message> getChatHistory();
 
