@@ -10,7 +10,6 @@ public class Message implements Serializable {
         this.from = from;
         this.message = message;
     }
-
     public void setMessage(String message) {
         this.message = message;
     }

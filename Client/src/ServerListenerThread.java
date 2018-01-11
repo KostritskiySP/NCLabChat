@@ -8,12 +8,13 @@ import com.thoughtworks.xstream.*;
 import com.thoughtworks.xstream.io.xml.DomDriver;
 import com.thoughtworks.xstream.io.xml.XppDriver;
 
-public class ServerListenerThread {
+public class ServerListenerThread implements ConnectToClient{
     private Socket socket;
     private Thread thread = null;
     private  InputStream inputStream;
     private  OutputStream outputStream;
     private Message messageIn = null;
+    String message="";
     public String nickName;
     XStream xStream = new XStream(new XppDriver());
     ConnectionListener listener;
@@ -27,7 +28,7 @@ public class ServerListenerThread {
             public void run() {
                 while (true) {
                     messageIn = (Message) xStream.fromXML(inputStream);
-                    System.out.println("[ " + messageIn.getFrom() + " ] : " + messageIn.getMessage());
+                    message="[ " + messageIn.getFrom() + " ] : " + messageIn.getMessage();
                 }
 
             }
@@ -41,6 +42,7 @@ public class ServerListenerThread {
     }
 
     public synchronized void disconnect() {
+        xStream.toXML("!LOGOUT",outputStream);
         thread.interrupt();
         try {
             socket.close();
@@ -49,7 +51,7 @@ public class ServerListenerThread {
         }
     }
 
-    public boolean autoriz(String login,String password) throws IOException {
+    public boolean authorization(String login,String password) throws IOException {
         boolean f=false;
         String  message =  "!authorize";
         xStream.toXML(message,outputStream);
@@ -62,7 +64,7 @@ public class ServerListenerThread {
         else return f=false;
     }
 
-    public boolean registr(String login,String password) throws IOException {
+    public boolean registration(String login,String password) throws IOException {
         boolean f=false;
         String message ="!registration";
         xStream.toXML(message,outputStream);
@@ -79,8 +81,16 @@ public class ServerListenerThread {
         xStream.toXML(message,outputStream);
     }
     public ArrayList<String> listOnline() throws IOException {
+        zaprosOnline();
         ArrayList<String> onlineList = null;
-        onlineList = (ArrayList<String>) xStream.fromXML(inputStream);
+        int number=(Integer) xStream.fromXML(inputStream);
+        for(int i=0;i<number;i++){
+            Message answer=(Message) xStream.fromXML(inputStream);
+            onlineList.add(answer.getFrom());
+        }
         return onlineList;
+    }
+    public String getMessage() throws IOException{
+        return message;
     }
 }

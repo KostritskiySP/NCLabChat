@@ -44,9 +44,9 @@ public class SocketClient implements ConnectionListener {
                 System.out.println("Введите команду");
                 message = keyboard.readLine();
                 if (message.equals("!authorize")) {
-                    connection.autoriz(login,password);
+                    connection.authorization(login,password);
                 } else if (message.equals("!registration")) {
-                    connection.registr(login,password);
+                    connection.registration(login,password);
                 }
                 else connection.send(message);
             }
