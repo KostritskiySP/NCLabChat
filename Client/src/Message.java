@@ -11,8 +11,7 @@ public class Message implements Serializable {
         this.message = message;
     }
 
-    public Message(String from, String message, String[] users) {
-        this.from = from;
+    public void setMessage(String message) {
         this.message = message;
     }
 

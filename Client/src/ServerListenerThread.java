@@ -11,8 +11,6 @@ import com.thoughtworks.xstream.io.xml.XppDriver;
 public class ServerListenerThread {
     private Socket socket;
     private Thread thread = null;
-//    private ObjectOutputStream objectOutputStream = null;
-//    private ObjectInputStream objectInputStream = null;
     private  InputStream inputStream;
     private  OutputStream outputStream;
     private Message messageIn = null;
@@ -22,19 +20,13 @@ public class ServerListenerThread {
 
     public ServerListenerThread(Socket socket, OutputStream outputStream, InputStream inputStream) {
         this.socket = socket;
-//        this.objectOutputStream = objectOutputStream;
-//        this.objectInputStream = objectInputStream;
         this.inputStream = inputStream;
         this.outputStream = outputStream;
-        //  in =new XStream(new DomDriver());
         thread = new Thread(new Runnable() {
             @Override
             public void run() {
-                // listener.onConnectionReady(ServerListenerThread.this);
                 while (true) {
                     messageIn = (Message) xStream.fromXML(inputStream);
-                    // messageIn= (Message)in.fromXML(objectInputStream);
-                   // listener.onReceiveMessage(ServerListenerThread.this,messageIn);                        
                     System.out.println("[ " + messageIn.getFrom() + " ] : " + messageIn.getMessage());
                 }
 
@@ -43,13 +35,9 @@ public class ServerListenerThread {
         thread.start();
     }
 
-    public synchronized void send(Message message) {
-        //  xs =  new XStream()     ;
-        // /FileOutputStream fs = new FileOutputStream("C:\\Users\\Анастасия\\IdeaProjects\\Chat\\employeedata.txt");
-        //   xs.toXML(message,objectOutputStream);
+    public synchronized void send(String message) {
         xStream.toXML(message,outputStream);
-//            objectOutputStream.writeObject(message);
-//            objectOutputStream.flush();
+
     }
 
     public synchronized void disconnect() {
@@ -61,34 +49,38 @@ public class ServerListenerThread {
         }
     }
 
-    public void autoriz() throws IOException {
-        Message message = new Message(null, "!authorize");
+    public boolean autoriz(String login,String password) throws IOException {
+        boolean f=false;
+        String  message =  "!authorize";
         xStream.toXML(message,outputStream);
-//        objectOutputStream.writeObject(message);
-//        objectOutputStream.flush();
+        Account account=new Account(login,password);
+        Message answer=(Message) xStream.fromXML(inputStream);
+        xStream.toXML(account,outputStream);
+        answer=(Message) xStream.fromXML(inputStream);
+        if(answer.getMessage().equals("#Success"))
+            return f=true;
+        else return f=false;
     }
 
-    public void registr() throws IOException {
-        Message message = new Message(null, "!registration");
+    public boolean registr(String login,String password) throws IOException {
+        boolean f=false;
+        String message ="!registration";
         xStream.toXML(message,outputStream);
-//        objectOutputStream.writeObject(message);
+        Account account=new Account(login,password);
+        Message answer=(Message) xStream.fromXML(inputStream);
+        xStream.toXML(account,outputStream);
+        answer=(Message) xStream.fromXML(inputStream);
+        if(answer.getMessage().equals("#Success"))
+            return f=true;
+        else return f=false;
     }
-
     public void zaprosOnline() throws IOException {
-
-        Message message = new Message(null, "!online");
+        String  message = "!online";
         xStream.toXML(message,outputStream);
-//        objectOutputStream.writeObject(message);
-
-
     }
-
     public ArrayList<String> listOnline() throws IOException {
         ArrayList<String> onlineList = null;
-
-//            onlineList = (ArrayList<String>) objectInputStream.readObject();
         onlineList = (ArrayList<String>) xStream.fromXML(inputStream);
-
         return onlineList;
     }
 }
