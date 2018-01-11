@@ -13,20 +13,28 @@ public class ClientServiceThread extends Thread implements ServiceMessageSender 
 
     private Socket socket;
     private Message userMessage;
-    private ServerData serverData;
+    private ServerDataControl serverData;
     private XStream xStream;
     private InputStream inputStream;
     private OutputStream outputStream;
     private ServerMessageListener messageListener;
-    private ServerDisconnectionListener disconnectionListener;
+    private ClientDisconnectionListener disconnectionListener;
 
-    public ClientServiceThread(Socket socket, ServerMessageListener sml, ServerData sd,
-                               ServerDisconnectionListener sdl) {
+    public ClientServiceThread(Socket socket) {
         xStream = new XStream(new XppDriver());
         this.socket = socket;
-        this.messageListener = sml;
-        this.serverData = sd;
+    }
+
+    public void addClientDisconnectionListener(ClientDisconnectionListener sdl) {
         this.disconnectionListener = sdl;
+    }
+
+    public void addServerMessageListener(ServerMessageListener sml) {
+        this.messageListener = sml;
+    }
+
+    public void addServerDataControl(ServerDataControl sd) {
+        this.serverData = sd;
     }
 
     public String getLogin() {
@@ -42,9 +50,7 @@ public class ClientServiceThread extends Thread implements ServiceMessageSender 
 
     private void authorization() {
         while (true) {
-            System.out.println("78787878");
             String message =(String) xStream.fromXML(inputStream);
-            System.out.println("88888888888");
             System.out.println(message);
             if (message.toUpperCase().equals("!AUTHORIZE")) {
                 xStream.toXML(new Message("Server", "#SendAccountInfo"), outputStream);
@@ -53,7 +59,7 @@ public class ClientServiceThread extends Thread implements ServiceMessageSender 
                 if(response.equals("#Success")){
                             userMessage = new Message(account.login, null);
                             xStream.toXML(new Message("Server", "#Success"), outputStream);
-                             System.out.println("sucess");
+                            System.out.println("Client"+userMessage.getFrom()+"connected successfully");
                             break;
                 }
                 else xStream.toXML(new Message("Server", "#Success"), outputStream);
@@ -74,9 +80,7 @@ public class ClientServiceThread extends Thread implements ServiceMessageSender 
         try {
             inputStream = socket.getInputStream();
             outputStream = socket.getOutputStream();
-            System.out.println("4444444444");
             authorization();
-            System.out.println("11010101010");
             System.out.println("Welcome " + userMessage.getFrom());
             for (Message message : serverData.getChatHistory()) {
                 xStream.toXML(message, outputStream);
@@ -89,11 +93,11 @@ public class ClientServiceThread extends Thread implements ServiceMessageSender 
                 userMessage.setMessage((String)xStream.fromXML(inputStream));
 //                userMessage = (Message) xStream.fromXML(inputStream);
                 System.out.println("[" + userMessage.getFrom() + "]: " + userMessage.getMessage());
-                if (userMessage.getMessage().equals("!logout")){
+                if (userMessage.getMessage().toUpperCase().equals("!LOGOUT")){
                     userMessage= new Message(null,"");
                     authorization();
                 }
-                else if (userMessage.getMessage().equals("!disconnect"))
+                else if (userMessage.getMessage().toUpperCase().equals("!DISCONNECT"))
                     break;
                 else {
                     messageListener.broadcast(this.userMessage);

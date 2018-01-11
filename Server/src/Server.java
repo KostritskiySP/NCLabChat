@@ -8,7 +8,7 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.util.*;
 
-public class Server implements ServerData, ServerMessageListener, ServerDisconnectionListener {
+public class Server implements ServerDataControl, ServerMessageListener, ClientDisconnectionListener {
 
     private ArrayList<ClientServiceThread> clientServiceThreads = new ArrayList<ClientServiceThread>();
     private ArrayList<Message> chatHistory = new ArrayList<>();
@@ -58,15 +58,12 @@ public class Server implements ServerData, ServerMessageListener, ServerDisconne
 //                }
 //                if(server.serversNetList.containsValue(client.getInetAddress()))
                 //Запуск серверов
-                System.out.println( "1111111111");
-                ClientServiceThread clientService = new ClientServiceThread(client, server,server,server);
-//                clientService.addClientDisconnectionListner(server implements ClientDisconnectionListner);
-//                clientService.addOnMessageListner(server implements ClientDisconnectionListner);
+                ClientServiceThread clientService = new ClientServiceThread(client);
+                clientService.addClientDisconnectionListener(server);
+                clientService.addServerMessageListener(server);
+                clientService.addServerDataControl(server);
                 server.clientServiceThreads.add(clientService);
-                System.out.println( "22222222");
                 clientService.start();
-
-                System.out.println( "33333333");
             }
         } catch (SocketException e) {
             System.err.println("Socket exception");
