@@ -7,9 +7,9 @@ public class Message implements Serializable {
     private String from;
     private String message;
 
-    public Message(Message message){
-        this.message=message.getMessage();
-        this.from=message.getFrom();
+    public Message(Message message) {
+        this.message = message.getMessage();
+        this.from = message.getFrom();
     }
 
     public Message(String from, String message) {

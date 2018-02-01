@@ -53,7 +53,7 @@ public class ServerListenerThread implements ConnectToClient {
 
     public Message receiptMessage() {
         messageIn1 = (Message) xStream.fromXML(inputStream);
-        if ((messageIn1.getFrom().equals("Server"))&& (messageIn1.getMessage().equals("Online")))
+        if ((messageIn1.getFrom().equals("Server"))&& (messageIn1.getMessage().equals("#Online")))
             getOnlineUsers();
         xStream.toXML("!OK",outputStream);
         return messageIn1;
@@ -104,19 +104,21 @@ public class ServerListenerThread implements ConnectToClient {
 
     public boolean authorization(String login, String password) throws  IOException {
         boolean check = false;
-        send("!authorize");
+        send("!Authorize");
         Account account = new Account(login, password);
-        try {
-            thread.sleep(10);
-            Message answer = (Message) xStream.fromXML(inputStream);
+//        try {
+//            thread.sleep(10);
+            xStream.fromXML(inputStream);
             xStream.toXML(account,outputStream);
-            answer = (Message) xStream.fromXML(inputStream);
+            Message answer = (Message) xStream.fromXML(inputStream);
+            send("!OK");
             if (answer.getMessage().equals("#Success"))
                 check = true;
             else  check = false;
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+//        }
+//        catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
         return check;
     }
 
@@ -154,6 +156,7 @@ public class ServerListenerThread implements ConnectToClient {
 
     public void getListOnline() throws IOException {
         ArrayList<String> message = (ArrayList<String>) xStream.fromXML(inputStream);
+        //send("!OK");
         onlineList = message;
     }
 

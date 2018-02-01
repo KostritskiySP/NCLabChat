@@ -12,6 +12,8 @@ import java.io.*;
 import java.net.Socket;
 import java.net.SocketException;
 import java.util.List;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 
 
 public class ClientServiceThread extends Thread implements ServiceMessageSender {
@@ -21,14 +23,25 @@ public class ClientServiceThread extends Thread implements ServiceMessageSender 
     private Message userMessage;
     private ServerDataControl serverData;
     private XStream xStream;
-    private InputStream inputStream;
-    private OutputStream outputStream;
+    private BufferedInputStream inputStream;
+    private BufferedOutputStream outputStream;
     private ServerMessageListener messageListener;
     private ClientDisconnectionListener disconnectionListener;
+    private String xmlObject;
+    private String stateResponse;
+    private boolean isActive;
+    private ReentrantLock senderLock = new ReentrantLock();
+    private boolean readyToSend;
 
     public ClientServiceThread(Socket socket) {
         xStream = new XStream(new XppDriver());
         this.socket = socket;
+        isActive = true;
+        stateResponse = "";
+    }
+
+    public void disable(){
+        isActive = false;
     }
 
     public void addClientDisconnectionListener(ClientDisconnectionListener sdl) {
@@ -61,20 +74,24 @@ public class ClientServiceThread extends Thread implements ServiceMessageSender 
      * Starts user authorization
      */
     private void authorization() {
-        while (true) {
-            String message =(String) xStream.fromXML(inputStream);
+        while (isActive) {
+            String message = (String) xStream.fromXML(inputStream);
             System.out.println(message);
             if (message.toUpperCase().equals("!AUTHORIZE")) {
                 xStream.toXML(new Message("Server", "#SendAccountInfo"), outputStream);
                 Account account = (Account) xStream.fromXML(inputStream);
                 String response = serverData.authorization(account);
-                if(response.equals("#Success")){
-                            userMessage = new Message(account.login, null);
+                if (response.equals("#Success")) {
+                    userMessage = new Message(account.login, null);
                     xStream.toXML(new Message("Server", "#Success"), outputStream);
-                            System.out.println("Client "+userMessage.getFrom()+" connected successfully");
-                            break;
+                    stateResponse = xStream.fromXML(inputStream).toString();
+                    System.out.println("Client " + userMessage.getFrom() + " connected successfully");
+                    break;
+                } else {
+                    xStream.toXML(new Message("Server", "#Success"), outputStream);
+                    stateResponse = xStream.fromXML(inputStream).toString();
                 }
-                else xStream.toXML(new Message("Server", "#Success"), outputStream);
+
             } else if (message.toUpperCase().equals("!REGISTRATION"))
                 try {
                     registration();
@@ -83,75 +100,103 @@ public class ClientServiceThread extends Thread implements ServiceMessageSender 
                 } catch (ClassNotFoundException e) {
                     e.printStackTrace();
                 }
-            else xStream.toXML(new Message("Server", "#authorizeFirst"), outputStream);
+            else {
+                xStream.toXML(new Message("Server", "#authorizeFirst"), outputStream);
+                stateResponse = xStream.fromXML(inputStream).toString();
+            }
         }
     }
 
 
-    public void run() {
+    public void run(){
         try {
-            inputStream = socket.getInputStream();
-            outputStream = socket.getOutputStream();
+            inputStream = new BufferedInputStream(socket.getInputStream());
+            outputStream = new BufferedOutputStream(socket.getOutputStream());
+//            stateResponse = xStream.fromXML(inputStream).toString();
             authorization();
-            System.out.println("Welcome " + userMessage.getFrom());
-            for (ServerMessage serverMessage : serverData.getChatHistory()) {
-                Message message = serverMessage.getMessage();
-                xStream.toXML(message, outputStream);
+            if (isActive) {
+                System.out.println("Welcome " + userMessage.getFrom());
+                for (ServerMessage serverMessage : serverData.getChatHistory()) {
+                    Message message = serverMessage.getMessage();
+                    xStream.toXML(message, outputStream);
+                    stateResponse = xStream.fromXML(inputStream).toString();
+                }
+                for (String login : serverData.getOnlineUsers()) {
+                    System.out.println("Online:" + login);
+                }
+                readyToSend = true;
+                while (isActive) {
+                    String mes = xStream.fromXML(inputStream).toString();
+                    messageProcessing(mes);
+                }
             }
-            for (String login : serverData.getOnlineUsers()) {
-                System.out.println("Online:" + login);
-            }
-
-            while (true) {
-                String mes = xStream.fromXML(inputStream).toString();
-                System.out.println("[" + userMessage.getFrom() + "]: " + mes);
-                if(mes.toUpperCase().equals("!ONLINE")){
-                    xStream.toXML(new Message("Server", String.valueOf(serverData.getOnlineUsers().size())), outputStream); //число онлайн пользователей
-                    for (String login : serverData.getOnlineUsers()) {
-                        xStream.toXML(new Message("Server", login), outputStream);
-                    }
-                }
-                else if(mes.toUpperCase().equals("!HISTORY")){
-                    List<ServerMessage> L = serverData.getChatHistory();
-                    for (ServerMessage serverMessage : L) {
-                        Message message = serverMessage.getMessage();
-                        System.out.println("[" + message.getFrom() + "] " + message.getMessage());
-                        xStream.toXML(new Message(message), outputStream);
-                    }
-                }
-                else if (mes.toUpperCase().equals("!LOGOUT")){
-                    userMessage= new Message(null,"");
-                    authorization();
-                }
-                else if (mes.toUpperCase().equals("!DISCONNECT"))
-                    break;
-                else {
-                    userMessage.setMessage(mes);
-                    messageListener.broadcast(new ServerMessage(this.userMessage));
-                }
-
-            }
-
         } catch (SocketException e) {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
-        } finally {
+        }  finally {
+            try {
+                socket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             System.out.println(userMessage.getFrom() + " disconnected!");
             disconnectionListener.clientDisconnected(this);
         }
 
+    }
+
+    public void messageProcessing(String mes) {
+        if (mes.toUpperCase().equals("!OK"))
+            readyToSend = true;
+        else if (mes.toUpperCase().equals("!ONLINE")) {
+            xStream.toXML(new Message("Server","#Online"), outputStream);
+            stateResponse = xStream.fromXML(inputStream).toString();
+            xStream.toXML(new Message("Server", String.valueOf(serverData.getOnlineUsers().size())), outputStream); //число онлайн пользователей
+            stateResponse = xStream.fromXML(inputStream).toString();
+            xStream.toXML(serverData.getOnlineUsers(), outputStream);
+            stateResponse = xStream.fromXML(inputStream).toString();
+//            for (String login : serverData.getOnlineUsers()) {
+//                xStream.toXML(new Message("Server", login), outputStream);
+//                stateResponse = xStream.fromXML(inputStream).toString();
+//            }
+        } else if (mes.toUpperCase().equals("!HISTORY")) {
+            List<ServerMessage> L = serverData.getChatHistory();
+            for (ServerMessage serverMessage : L) {
+                Message message = serverMessage.getMessage();
+                System.out.println("[" + message.getFrom() + "] " + message.getMessage());
+                xStream.toXML(new Message(message), outputStream);
+                stateResponse = xStream.fromXML(inputStream).toString();
+            }
+        } else if (mes.toUpperCase().equals("!LOGOUT")) {
+            readyToSend = false;
+            userMessage = new Message(null, "");
+            authorization();
+        } else if (mes.toUpperCase().equals("!DISCONNECT"))
+            isActive = false;
+        else {
+            userMessage.setMessage(mes);
+            messageListener.broadcast(new ServerMessage(this.userMessage));
+        }
     }
 
 
     @Override
     public boolean sendMessage(ServerMessage serverMessage) {
+        senderLock.lock();
         try {
+            while (!readyToSend) {
+            }
             Message message = new Message(serverMessage.getMessage());
             xStream.toXML(message, outputStream);
+            outputStream.flush();
         } catch (XStreamException e) {
             System.out.println(userMessage.getFrom() + " disconnected!");
             disconnectionListener.clientDisconnected(this);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            senderLock.unlock();
         }
         return true;
     }

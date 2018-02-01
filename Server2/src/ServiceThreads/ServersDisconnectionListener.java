@@ -7,5 +7,5 @@ public interface ServersDisconnectionListener {
     /**
      * indicates whenever server is disconnected
      */
-    public void serverDisconnected(ServerNetServiceThread serverNetServiceThread);
+    public boolean serverDisconnected(ServerNetServiceThread serverNetServiceThread);
 }

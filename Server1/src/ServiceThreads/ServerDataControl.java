@@ -1,6 +1,7 @@
 package ServiceThreads;
 
 import Entities.Account;
+import Entities.ServerMessage;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,17 +14,19 @@ public interface ServerDataControl {
     /**
      * returns server chat history
      */
-    List<Entities.ServerMessage> getChatHistory();
+    List<ServerMessage> getChatHistory();
 
     /**
      * returns a list of currently online users
      */
     ArrayList<String> getOnlineUsers();
 
+
     /**
      * starts a registration process on server
      */
     String registration(Account account);
+
     /**
      * starts an authorization process on server
      */

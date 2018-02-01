@@ -7,8 +7,4 @@
     <port>6668</port>
     <ip>127.0.0.1</ip>
   </Entities.ServerPortIP>
-  <Entities.ServerPortIP>
-    <port>6669</port>
-    <ip>127.0.0.1</ip>
-  </Entities.ServerPortIP>
 </linked-hash-set>

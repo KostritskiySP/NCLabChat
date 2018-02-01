@@ -11,19 +11,19 @@ public class ServerMessage {
     private Message message;
     private long date;
 
-    public ServerMessage(long date, Message message) {
-        this.date = date;
-        this.message = message;
+    public ServerMessage(String from, String message) {
+        this.date = new Date().getTime();
+        this.message = new Message(from, message);
     }
 
-    public ServerMessage(Message message){
-        this.message = message;
+    public ServerMessage(Message message) {
+        this.message = new Message(message);
         this.date = new Date().getTime();
     }
 
-    public ServerMessage(ServerMessage serverMessage){
+    public ServerMessage(ServerMessage serverMessage) {
         this.date = serverMessage.date;
-        this.message = serverMessage.message;
+        this.message = new Message(serverMessage.message);
     }
 
     public Message getMessage() {
@@ -38,7 +38,7 @@ public class ServerMessage {
             return false;
         }
         ServerMessage serverMessage = (ServerMessage) obj;
-        return (serverMessage.date==this.date &&
+        return (serverMessage.date == this.date &&
                 serverMessage.message.getMessage().equals(this.message.getMessage()) &&
                 serverMessage.message.getFrom().equals(this.message.getFrom()));
     }

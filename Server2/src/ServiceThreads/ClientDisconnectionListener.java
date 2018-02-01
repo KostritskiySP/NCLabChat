@@ -9,5 +9,6 @@ public interface ClientDisconnectionListener {
     /**
      * indicates whenever client is disconnected
      */
-    public void clientDisconnected(ClientServiceThread clientServiceThread);
+    public boolean clientDisconnected(ClientServiceThread clientServiceThread);
+
 }

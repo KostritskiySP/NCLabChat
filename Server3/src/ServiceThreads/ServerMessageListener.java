@@ -8,7 +8,14 @@ import Entities.ServerMessage;
  */
 public interface ServerMessageListener {
     /**
-     * starts a send request on server
+     * broadcasts a message to clients and nearby servers
+     * if loop detected - does nothing
+     * @return false if loop detected, true otherwise
      */
-    public void broadcast(ServerMessage message);
+    public boolean broadcast(ServerMessage message);
+
+    /**
+     * broadcasts a message nearby servers
+     */
+    public void broadcastOnNet(ServerMessage message);
 }

@@ -52,7 +52,7 @@ public class SocketClient {
 
             if (message.equals("!authorize")) {
                 if (connections.authorization(login, password))
-                    System.out.println("Succsess");
+                    System.out.println("Success");
             } else if (message.equals("!registration"))
                 System.out.println(connections.registration(login, password));
             connections.printMessage();
