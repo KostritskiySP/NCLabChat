@@ -1,96 +1,181 @@
 import java.io.*;
 import java.net.Socket;
-import java.net.SocketException;
 import java.util.ArrayList;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import com.thoughtworks.xstream.*;
-import com.thoughtworks.xstream.io.xml.DomDriver;
-import com.thoughtworks.xstream.io.xml.XppDriver;
+import com.thoughtworks.xstream.io.xml.Xpp3Driver;
+import Entities.Account;
+import Entities.Message;
 
-public class ServerListenerThread implements ConnectToClient{
+/**
+ * Класс, связывающийся с сервером
+ */
+
+public class ServerListenerThread implements ConnectToClient {
     private Socket socket;
     private Thread thread = null;
-    private  InputStream inputStream;
-    private  OutputStream outputStream;
+    ArrayList<String> onlineList = null;
+    private InputStream inputStream;
+    private OutputStream outputStream;
     private Message messageIn = null;
-    String message="";
-    public String nickName;
-    XStream xStream = new XStream(new XppDriver());
-    ConnectionListener listener;
+    private  Message messageIn1=null;
+    XStream xStream= new XStream(new Xpp3Driver());
+
 
     public ServerListenerThread(Socket socket, OutputStream outputStream, InputStream inputStream) {
         this.socket = socket;
         this.inputStream = inputStream;
         this.outputStream = outputStream;
+    }
+
+    /**
+     * Вывод данных от сервера
+     */
+
+    public void printMessage() {
         thread = new Thread(new Runnable() {
             @Override
             public void run() {
-                while (true) {
-                    messageIn = (Message) xStream.fromXML(inputStream);
-                    message="[ " + messageIn.getFrom() + " ] : " + messageIn.getMessage();
-                }
-
+                   while (!thread.isInterrupted()) {
+                               messageIn = receiptMessage();
+                               if (messageIn.getFrom().equals("Server"))
+                                   System.out.println("SERVER : " + messageIn.getMessage());
+                               else System.out.println("[ " + messageIn.getFrom() + " ] : " + messageIn.getMessage());
+                   }
             }
+
         });
         thread.start();
     }
 
+    /**
+     * Получение сообщения ст сервера
+     */
+
+    public Message receiptMessage() {
+        messageIn1 = (Message) xStream.fromXML(inputStream);
+        if ((messageIn1.getFrom().equals("Server"))&& (messageIn1.getMessage().equals("Online")))
+            getOnlineUsers();
+        xStream.toXML("!OK",outputStream);
+        return messageIn1;
+    }
+
+
+    /**
+     *  Отправка сообщения на сервер
+     *  @param message - заданное сообщение
+     */
+
     public synchronized void send(String message) {
         xStream.toXML(message,outputStream);
-
     }
 
-    public synchronized void disconnect() {
-        xStream.toXML("!LOGOUT",outputStream);
-        thread.interrupt();
+    /**
+     *  Отсоединение пользователя, если нажата кнопка выйти
+     */
+
+    public void logOut() throws IOException {
+        send("!logout");
+        thread.interrupt();//!!!!!!!!!!!!!!!
+    }
+
+    /**
+     *  Отсоединение пользователя, если закрыто приложение
+     */
+
+    public void disconnect() throws IOException {
+        send("!disconnect");
+        thread.interrupt();//!!!!!!!!!!!!!!!
+        socket.close();
+    }
+
+    /**
+     *  Получение историй сообщений
+     */
+
+    public void getHistoryChat()throws IOException{
+        send("!HISTORY");
+    }
+
+    /**
+     *  Авторизация пользователя
+     *  @param login - логин пользователя
+     *  @param password - пароль пользователя
+     */
+
+    public boolean authorization(String login, String password) throws  IOException {
+        boolean check = false;
+        send("!authorize");
+        Account account = new Account(login, password);
         try {
-            socket.close();
-        } catch (IOException e) {
-            listener.onException(this,e);
+            thread.sleep(10);
+            Message answer = (Message) xStream.fromXML(inputStream);
+            xStream.toXML(account,outputStream);
+            answer = (Message) xStream.fromXML(inputStream);
+            if (answer.getMessage().equals("#Success"))
+                check = true;
+            else  check = false;
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
+        return check;
     }
 
-    public boolean authorization(String login,String password) throws IOException {
-        boolean f=false;
-        String  message =  "!authorize";
-        xStream.toXML(message,outputStream);
-        Account account=new Account(login,password);
-        Message answer=(Message) xStream.fromXML(inputStream);
-        xStream.toXML(account,outputStream);
-        answer=(Message) xStream.fromXML(inputStream);
-        if(answer.getMessage().equals("#Success"))
-            return f=true;
-        else return f=false;
+    /**
+     *  Регистрация пользователя
+     *  @param login - логин пользователя
+     *  @param password - пароль пользователя
+     */
+
+    public String registration(String login, String password) throws IOException {
+        String answer = "";
+        send("!REGISTRATION");
+        Account account = new Account(login, password);
+        try {
+            thread.sleep(10);
+            Message message = (Message) xStream.fromXML(inputStream);
+            xStream.toXML(account,outputStream);
+            message = (Message) xStream.fromXML(inputStream);
+            if (message.getMessage().equals("#Success"))
+                answer = "#Success";
+            else if (message.getMessage().equals("#incorrectPassword"))
+                answer = "#incorrectPassword";
+            else if (message.getMessage().equals("#alreadyRegistered"))
+                answer = "#alreadyRegistered";
+        }
+        catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        return answer;
     }
 
-    public boolean registration(String login,String password) throws IOException {
-        boolean f=false;
-        String message ="!registration";
-        xStream.toXML(message,outputStream);
-        Account account=new Account(login,password);
-        Message answer=(Message) xStream.fromXML(inputStream);
-        xStream.toXML(account,outputStream);
-        answer=(Message) xStream.fromXML(inputStream);
-        if(answer.getMessage().equals("#Success"))
-            return f=true;
-        else return f=false;
+    /**
+     *  Получение  списка пользователей онлайн
+     */
+
+    public void getListOnline() throws IOException {
+        ArrayList<String> message = (ArrayList<String>) xStream.fromXML(inputStream);
+        onlineList = message;
     }
-    public void zaprosOnline() throws IOException {
-        String  message = "!online";
-        xStream.toXML(message,outputStream);
-    }
-    public ArrayList<String> listOnline() throws IOException {
-        zaprosOnline();
-        ArrayList<String> onlineList = null;
-        int number=(Integer) xStream.fromXML(inputStream);
-        for(int i=0;i<number;i++){
-            Message answer=(Message) xStream.fromXML(inputStream);
-            onlineList.add(answer.getFrom());
-        }
+
+    /**
+     *  Получение  списка пользователей онлайн
+     */
+
+    public ArrayList<String> getOnlineUser()throws InterruptedException{
+        send("!online");
+        Thread.sleep(100);
         return onlineList;
     }
-    public String getMessage() throws IOException{
-        return message;
+    /**
+     * Вспомагательный метод для получения списка пользователей онлайн
+     */
+    public void getOnlineUsers(){
+        try {
+            getListOnline();
+        }
+        catch (IOException e) {
+              }
     }
 }
+
+

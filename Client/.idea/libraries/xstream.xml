@@ -1,10 +1,10 @@
 <component name="libraryTable">
   <library name="xstream">
     <CLASSES>
-      <root url="file://C:/Games/xstream-distribution-1.4.10-bin/xstream-1.4.10/lib/xstream" />
+      <root url="file://C:/Program Files/Java/lib/xstream" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />
-    <jarDirectory url="file://C:/Games/xstream-distribution-1.4.10-bin/xstream-1.4.10/lib/xstream" recursive="false" />
+    <jarDirectory url="file://C:/Program Files/Java/lib/xstream" recursive="false" />
   </library>
 </component>
