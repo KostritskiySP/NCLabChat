@@ -164,12 +164,10 @@ public class Server implements ServerDataControl, ServerMessageListener, ClientD
         for (ClientServiceThread clientThread : clientServiceThreads) {
             if (clientThread.getLogin() != null) {
                 loginList.add(clientThread.getLogin());
-                System.out.println("cl " + clientThread.getLogin());
             }
         }
         for (String login : usersOnlineInNet) {
             loginList.add(login);
-            System.out.println("net " + login);
         }
         return loginList;
     }
@@ -186,7 +184,7 @@ public class Server implements ServerDataControl, ServerMessageListener, ClientD
 
     @Override
     public String registration(Account account) {
-        if (!account.login.equals("") && !account.login.toUpperCase().equals("SERVER")
+        if (!account.login.equals("") && !account.login.toUpperCase().equals("SERVER")&& !account.login.toUpperCase().equals("Notification")
                 && !registeredUsers.containsKey(account.login)) {
             if (!account.password.equals("")) {
                 addRegisteredUser(account.login, account.password);
@@ -236,6 +234,7 @@ public class Server implements ServerDataControl, ServerMessageListener, ClientD
 
     @Override
     public boolean netClientDisconnected(String login) { //true if removed
+        for (ServiceMessageSender thread : clientServiceThreads) thread.sendMessage(new ServerMessage("Notification",login+"вышел"));
         return usersOnlineInNet.remove(login);
     }
 

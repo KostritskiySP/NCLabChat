@@ -58,7 +58,7 @@ public class ServerNetServiceThread extends Thread implements ServiceMessageSend
                     String command = mes.getMessage().getMessage();
                     if (command.substring(0, 12).equals("disconnected")) {     //check for disconnection message
                         String login = command.substring(13, command.length());
-                        if(netClientListener.netClientDisconnected(login)){
+                        if (netClientListener.netClientDisconnected(login)) {
                             messageListener.broadcastOnNet(mes);
                             System.out.println(command);
                         }

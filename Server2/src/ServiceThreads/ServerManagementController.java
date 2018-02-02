@@ -6,6 +6,7 @@ package ServiceThreads;
 public interface ServerManagementController {
     /**
      * disconnects client from server
+     *
      * @return false - if client with such login not found, true if success
      */
     public boolean kick(String login);

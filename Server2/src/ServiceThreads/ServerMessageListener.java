@@ -10,6 +10,7 @@ public interface ServerMessageListener {
     /**
      * broadcasts a message to clients and nearby servers
      * if loop detected - does nothing
+     *
      * @return false if loop detected, true otherwise
      */
     public boolean broadcast(ServerMessage message);

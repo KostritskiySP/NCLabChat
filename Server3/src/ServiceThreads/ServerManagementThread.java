@@ -11,19 +11,24 @@ import java.util.regex.Pattern;
  */
 public class ServerManagementThread extends Thread {
     ServerManagementController controller;
-    boolean f;
 
-    public void addServerManagementController(ServerManagementController smc){
-        this.controller=smc;
+    public void addServerManagementController(ServerManagementController smc) {
+        this.controller = smc;
     }
-    public void run(){
+
+    public void run() {
         BufferedReader keyboard = new BufferedReader(new InputStreamReader(System.in));
-        while (true){
+        while (true) {
             try {
-                String command =  keyboard.readLine();
+                String command = keyboard.readLine();
                 Pattern exitPattern = Pattern.compile("\\s*[Ee][Xx][Ii][Tt]\\s*");
-                if(exitPattern.matcher(command).matches())
+                if (exitPattern.matcher(command).matches())
                     System.exit(0);
+                Pattern kickPattern = Pattern.compile("\\s*[Kk][Ii][Cc][Kk].*");
+                if (kickPattern.matcher(command).matches()){
+                    command = command.replaceAll("\\s*[Kk][Ii][Cc][Kk]\\s*","");
+                    controller.kick(command);
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             }

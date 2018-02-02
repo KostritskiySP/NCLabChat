@@ -27,11 +27,11 @@ public class ClientServiceThread extends Thread implements ServiceMessageSender 
     private BufferedOutputStream outputStream;
     private ServerMessageListener messageListener;
     private ClientDisconnectionListener disconnectionListener;
-    private String xmlObject;
     private String stateResponse;
     private boolean isActive;
     private ReentrantLock senderLock = new ReentrantLock();
-    private boolean readyToSend;
+    //    private boolean readyToSend;
+    private ReentrantLock readyToSendLock = new ReentrantLock();
 
     public ClientServiceThread(Socket socket) {
         xStream = new XStream(new XppDriver());
@@ -40,7 +40,7 @@ public class ClientServiceThread extends Thread implements ServiceMessageSender 
         stateResponse = "";
     }
 
-    public void disable(){
+    public void disable() {
         isActive = false;
     }
 
@@ -108,8 +108,10 @@ public class ClientServiceThread extends Thread implements ServiceMessageSender 
     }
 
 
-    public void run(){
+    public void run() {
         try {
+//            readyToSend = false;
+            readyToSendLock.lock();
             inputStream = new BufferedInputStream(socket.getInputStream());
             outputStream = new BufferedOutputStream(socket.getOutputStream());
 //            stateResponse = xStream.fromXML(inputStream).toString();
@@ -121,20 +123,23 @@ public class ClientServiceThread extends Thread implements ServiceMessageSender 
                     xStream.toXML(message, outputStream);
                     stateResponse = xStream.fromXML(inputStream).toString();
                 }
-                for (String login : serverData.getOnlineUsers()) {
-                    System.out.println("Online:" + login);
-                }
-                readyToSend = true;
+//                for (String login : serverData.getOnlineUsers()) {
+//                    System.out.println("Online:" + login);
+//                }
+                readyToSendLock.unlock();
+//                readyToSend = true;
                 while (isActive) {
-                    String mes = xStream.fromXML(inputStream).toString();
-                    messageProcessing(mes);
+                    if (inputStream.available() != 0) {
+                        String mes = xStream.fromXML(inputStream).toString();
+                        messageProcessing(mes);
+                    }
                 }
             }
         } catch (SocketException e) {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
-        }  finally {
+        } finally {
             try {
                 socket.close();
             } catch (IOException e) {
@@ -147,12 +152,13 @@ public class ClientServiceThread extends Thread implements ServiceMessageSender 
     }
 
     public void messageProcessing(String mes) {
-        if (mes.toUpperCase().equals("!OK"))
-            readyToSend = true;
+        if (mes.toUpperCase().equals("!OK")) {
+            readyToSendLock.lock();
+            readyToSendLock.unlock();
+        }
+//            readyToSend = true;
         else if (mes.toUpperCase().equals("!ONLINE")) {
-            xStream.toXML(new Message("Server","#Online"), outputStream);
-            stateResponse = xStream.fromXML(inputStream).toString();
-            xStream.toXML(new Message("Server", String.valueOf(serverData.getOnlineUsers().size())), outputStream); //число онлайн пользователей
+            xStream.toXML(new Message("Server", "#Online"), outputStream);
             stateResponse = xStream.fromXML(inputStream).toString();
             xStream.toXML(serverData.getOnlineUsers(), outputStream);
             stateResponse = xStream.fromXML(inputStream).toString();
@@ -169,7 +175,8 @@ public class ClientServiceThread extends Thread implements ServiceMessageSender 
                 stateResponse = xStream.fromXML(inputStream).toString();
             }
         } else if (mes.toUpperCase().equals("!LOGOUT")) {
-            readyToSend = false;
+            readyToSendLock.lock();
+//            readyToSend = false;
             userMessage = new Message(null, "");
             authorization();
         } else if (mes.toUpperCase().equals("!DISCONNECT"))
@@ -185,8 +192,10 @@ public class ClientServiceThread extends Thread implements ServiceMessageSender 
     public boolean sendMessage(ServerMessage serverMessage) {
         senderLock.lock();
         try {
-            while (!readyToSend) {
-            }
+//            while (!readyToSend) {
+//            }
+//            readyToSend = false;
+            readyToSendLock.lock();
             Message message = new Message(serverMessage.getMessage());
             xStream.toXML(message, outputStream);
             outputStream.flush();
@@ -196,6 +205,7 @@ public class ClientServiceThread extends Thread implements ServiceMessageSender 
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
+            readyToSendLock.unlock();
             senderLock.unlock();
         }
         return true;
