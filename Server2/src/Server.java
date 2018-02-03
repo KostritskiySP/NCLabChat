@@ -234,6 +234,7 @@ public class Server implements ServerDataControl, ServerMessageListener, ClientD
 
     @Override
     public boolean netClientDisconnected(String login) { //true if removed
+        System.out.println(login+" disconnected");
         for (ServiceMessageSender thread : clientServiceThreads) thread.sendMessage(new ServerMessage("Notification",login+"вышел"));
         return usersOnlineInNet.remove(login);
     }

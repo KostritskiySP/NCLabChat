@@ -145,8 +145,8 @@ public class ClientServiceThread extends Thread implements ServiceMessageSender 
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            System.out.println(userMessage.getFrom() + " disconnected!");
             disconnectionListener.clientDisconnected(this);
+            System.out.println(userMessage.getFrom() + " disconnected!");
         }
 
     }
