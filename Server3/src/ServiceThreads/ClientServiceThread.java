@@ -38,6 +38,7 @@ public class ClientServiceThread extends Thread implements ServiceMessageSender 
         this.socket = socket;
         isActive = true;
         stateResponse = "";
+        userMessage = new Message(null,null);
     }
 
     public void disable() {
@@ -88,7 +89,7 @@ public class ClientServiceThread extends Thread implements ServiceMessageSender 
                     System.out.println("Client " + userMessage.getFrom() + " connected successfully");
                     break;
                 } else {
-                    xStream.toXML(new Message("Server", "#Success"), outputStream);
+                    xStream.toXML(new Message("Server", response), outputStream);
                     stateResponse = xStream.fromXML(inputStream).toString();
                 }
 
@@ -114,6 +115,7 @@ public class ClientServiceThread extends Thread implements ServiceMessageSender 
             readyToSendLock.lock();
             inputStream = new BufferedInputStream(socket.getInputStream());
             outputStream = new BufferedOutputStream(socket.getOutputStream());
+            xStream.toXML(new Message("Notification", "#Welcome to server! Please authorize or register."), outputStream);
 //            stateResponse = xStream.fromXML(inputStream).toString();
             authorization();
             if (isActive) {

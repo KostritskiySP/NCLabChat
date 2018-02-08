@@ -184,7 +184,7 @@ public class Server implements ServerDataControl, ServerMessageListener, ClientD
 
     @Override
     public String registration(Account account) {
-        if (!account.login.equals("") && !account.login.toUpperCase().equals("SERVER")&& !account.login.toUpperCase().equals("Notification")
+        if (!account.login.equals("") && !account.login.toUpperCase().equals("SERVER")&& !account.login.toUpperCase().equals("NOTIFICATION")
                 && !registeredUsers.containsKey(account.login)) {
             if (!account.password.equals("")) {
                 addRegisteredUser(account.login, account.password);
@@ -201,6 +201,10 @@ public class Server implements ServerDataControl, ServerMessageListener, ClientD
         if (!account.login.equals("") || registeredUsers.containsKey(account.login)) {
             if (!account.password.equals("")) {
                 if (registeredUsers.get(account.login).equals(account.password)) {
+                    for(ClientServiceThread thread : clientServiceThreads){
+                        if(thread.getLogin()!=null && thread.getLogin().equals(account.login))
+                            return "#UserAlreadyConnected";
+                    }
                     return "#Success";
                 } else return "#passwordIncorrect";
             } else return "#emptyPassword";
