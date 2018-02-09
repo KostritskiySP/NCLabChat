@@ -18,5 +18,5 @@ public interface ServerMessageListener {
     /**
      * broadcasts a message nearby servers
      */
-    public void broadcastOnNet(ServerMessage message);
+//    public void broadcastOnNet(ServerMessage message);
 }

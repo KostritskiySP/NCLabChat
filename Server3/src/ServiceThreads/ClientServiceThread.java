@@ -87,6 +87,7 @@ public class ClientServiceThread extends Thread implements ServiceMessageSender 
                     xStream.toXML(new Message("Server", "#Success"), outputStream);
                     stateResponse = xStream.fromXML(inputStream).toString();
                     System.out.println("Client " + userMessage.getFrom() + " connected successfully");
+
                     break;
                 } else {
                     xStream.toXML(new Message("Server", response), outputStream);

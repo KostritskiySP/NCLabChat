@@ -205,6 +205,7 @@ public class Server implements ServerDataControl, ServerMessageListener, ClientD
                         if(thread.getLogin()!=null && thread.getLogin().equals(account.login))
                             return "#UserAlreadyConnected";
                     }
+                    broadcast(new ServerMessage("SERVER","connected "+account.login));
                     return "#Success";
                 } else return "#passwordIncorrect";
             } else return "#emptyPassword";
@@ -218,33 +219,30 @@ public class Server implements ServerDataControl, ServerMessageListener, ClientD
             addMessage(message);
             System.out.println("[" + message.getMessage().getFrom() + "]: " + message.getMessage().getMessage());
             for (ServiceMessageSender thread : clientServiceThreads) thread.sendMessage(message);
-            broadcastOnNet(message);
+            for (ServiceMessageSender thread : serverNetServiceThreads) thread.sendMessage(message);
             return true;
         } else return false;
     }
 
-    @Override
-    public void broadcastOnNet(ServerMessage message) {
-        for (ServiceMessageSender thread : serverNetServiceThreads) thread.sendMessage(message);
-    }
+//    @Override
+//    public void broadcastOnNet(ServerMessage message) {
+//        for (ServiceMessageSender thread : serverNetServiceThreads) thread.sendMessage(message);
+//    }
 
     @Override
-    public boolean clientDisconnected(ClientServiceThread clientServiceThread) {
-        ServerMessage disconnectionNotification = new ServerMessage("SERVER", "disconnected " + clientServiceThread.getLogin());
-        for (ServiceMessageSender thread : serverNetServiceThreads) thread.sendMessage(disconnectionNotification);
+    public void clientDisconnected(ClientServiceThread clientServiceThread) {
         clientServiceThread.disable();
-        return clientServiceThreads.remove(clientServiceThread);
+        clientServiceThreads.remove(clientServiceThread);
+        broadcast(new ServerMessage("SERVER", "disconnected " + clientServiceThread.getLogin()));
     }
 
     @Override
-    public boolean netClientDisconnected(String login) { //true if removed
-        System.out.println(login+" disconnected");
-        for (ServiceMessageSender thread : clientServiceThreads) thread.sendMessage(new ServerMessage("Notification",login+"вышел"));
-        return usersOnlineInNet.remove(login);
+    public void netClientDisconnected(String login) {
+        usersOnlineInNet.remove(login);
     }
 
     @Override
-    public void netClientAppeared(String login) {
+    public void netClientConnected(String login) {
         usersOnlineInNet.add(login);
     }
 
@@ -263,5 +261,13 @@ public class Server implements ServerDataControl, ServerMessageListener, ClientD
             }
         }
         return false;
+    }
+
+    @Override
+    public void exit() {
+        for(ClientServiceThread clThread:clientServiceThreads){
+            if(clThread.getLogin()!=null)
+                for (ServiceMessageSender thread : serverNetServiceThreads)
+                    thread.sendMessage(new ServerMessage("SERVER", "disconnected " + clThread.getLogin()));}
     }
 }

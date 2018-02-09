@@ -5,8 +5,8 @@ package ServiceThreads;
  */
 public interface NetClientListener {
 
-    public boolean netClientDisconnected(String login);
+    public void netClientDisconnected(String login);
 
-    public void netClientAppeared(String login);
+    public void netClientConnected(String login);
 
 }

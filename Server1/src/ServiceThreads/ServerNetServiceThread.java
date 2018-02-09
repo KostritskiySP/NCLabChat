@@ -7,8 +7,6 @@ import com.thoughtworks.xstream.io.xml.XppDriver;
 
 import java.io.*;
 import java.net.Socket;
-import java.net.SocketException;
-import java.util.ArrayList;
 
 /**
  * Created by Sergio on 11.01.2018.
@@ -54,18 +52,19 @@ public class ServerNetServiceThread extends Thread implements ServiceMessageSend
             outputStream = new BufferedWriter(new PrintWriter(socket.getOutputStream()));
             while (isActive) {
                 ServerMessage mes = (ServerMessage) xStream.fromXML(inputStream);
-                if (mes.getMessage().getFrom().toUpperCase().equals("SERVER")) {         //check if command
-                    String command = mes.getMessage().getMessage();
-                    if (command.substring(0, 12).equals("disconnected")) {     //check for disconnection message
-                        String login = command.substring(13, command.length());
-                        if (netClientListener.netClientDisconnected(login)) {
-                            messageListener.broadcastOnNet(mes);
+                if (messageListener.broadcast(mes)) {
+                    if (mes.getMessage().getFrom().toUpperCase().equals("SERVER")) {         //check if command
+                        String command = mes.getMessage().getMessage();
+                        if (command.length()>=12  && command.substring(0, 12).equals("disconnected")) {     //check for disconnection message
+                            String login = command.substring(13, command.length());
+                            netClientListener.netClientDisconnected(login);
                             System.out.println(command);
                         }
+                        if (command.length()>=9  && command.substring(0, 9).equals("connected")){
+                            String login = command.substring(10, command.length());
+                            netClientListener.netClientConnected(login);
+                        }
                     }
-                } else if (messageListener.broadcast(mes)) {
-                    String from = mes.getMessage().getFrom();
-                    netClientListener.netClientAppeared(from);
                 }
             }
         } catch (IOException e) {

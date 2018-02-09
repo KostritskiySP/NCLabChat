@@ -10,4 +10,6 @@ public interface ServerManagementController {
      * @return false - if client with such login not found, true if success
      */
     public boolean kick(String login);
+
+    public void exit();
 }

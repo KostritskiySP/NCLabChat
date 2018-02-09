@@ -22,8 +22,10 @@ public class ServerManagementThread extends Thread {
             try {
                 String command = keyboard.readLine();
                 Pattern exitPattern = Pattern.compile("\\s*[Ee][Xx][Ii][Tt]\\s*");
-                if (exitPattern.matcher(command).matches())
+                if (exitPattern.matcher(command).matches()){
+                    controller.exit();
                     System.exit(0);
+                }
                 Pattern kickPattern = Pattern.compile("\\s*[Kk][Ii][Cc][Kk].*");
                 if (kickPattern.matcher(command).matches()){
                     command = command.replaceAll("\\s*[Kk][Ii][Cc][Kk]\\s*","");
