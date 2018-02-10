@@ -205,7 +205,6 @@ public class Server implements ServerDataControl, ServerMessageListener, ClientD
                         if(thread.getLogin()!=null && thread.getLogin().equals(account.login))
                             return "#UserAlreadyConnected";
                     }
-                    broadcast(new ServerMessage("SERVER","connected "+account.login));
                     return "#Success";
                 } else return "#passwordIncorrect";
             } else return "#emptyPassword";

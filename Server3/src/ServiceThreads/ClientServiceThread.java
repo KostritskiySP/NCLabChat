@@ -129,6 +129,7 @@ public class ClientServiceThread extends Thread implements ServiceMessageSender 
 //                for (String login : serverData.getOnlineUsers()) {
 //                    System.out.println("Online:" + login);
 //                }
+                messageListener.broadcast(new ServerMessage("SERVER","connected "+userMessage.getFrom()));
                 readyToSendLock.unlock();
 //                readyToSend = true;
                 while (isActive) {
