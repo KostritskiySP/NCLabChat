@@ -63,6 +63,7 @@ public class ServerNetServiceThread extends Thread implements ServiceMessageSend
                         if (command.length()>=9  && command.substring(0, 9).equals("connected")){
                             String login = command.substring(10, command.length());
                             netClientListener.netClientConnected(login);
+                            System.out.println(command);
                         }
                     }
                 }

@@ -16,10 +16,9 @@ public class Server implements ServerDataControl, ServerMessageListener, ClientD
     private ArrayList<ClientServiceThread> clientServiceThreads = new ArrayList<ClientServiceThread>();
     private ArrayList<ServerNetServiceThread> serverNetServiceThreads = new ArrayList<ServerNetServiceThread>();
     private ArrayList<ServerMessage> chatHistory = new ArrayList<>();
+    private ArrayList<ServerMessage> serverNotificationsHistory = new ArrayList<>();
     private HashMap<String, String> registeredUsers = new HashMap<>();
-    //private ArrayList<Server> connectedServers = new ArrayList<>();
     private LinkedHashSet<ServerPortIP> serversNetList = new LinkedHashSet();
-    //private ArrayList<Socket> serverNetSockets = new ArrayList<>();
     private XStream xStream = new XStream(new StaxDriver());
     private LinkedHashSet<String> usersOnlineInNet;
 
@@ -33,25 +32,6 @@ public class Server implements ServerDataControl, ServerMessageListener, ClientD
         try {
             Server server = new Server();
 
-//            LinkedHashSet<ServerPortIP> serverNet = new LinkedHashSet<>();
-//            serverNet.add(new ServerPortIP(6667,"127.0.0.1"));
-//            serverNet.add(new ServerPortIP(6668,"127.0.0.1"));
-//            serverNet.add(new ServerPortIP(6669,"127.0.0.1"));
-//
-//            server.xStream.toXML(serverNet,new FileOutputStream("serversNet"));
-
-//            server.registeredUsers.put("1","1");
-//            server.registeredUsers.put("2","1");
-//            server.registeredUsers.put("3","1");
-//            server.registeredUsers.put("4","1");
-//            server.registeredUsers.put("Vasya","1");
-//            server.registeredUsers.put("Petya","1");
-//            server.registeredUsers.put("Kolya","1");
-//            server.xStream.toXML(server.registeredUsers,new FileOutputStream("registered"));
-//            ArrayList<Message> AL=new ArrayList<Entities.Message>();
-//            AL.add(new Message("111","1123123"));
-//            server.xStream.toXML(server.serversNetList,new FileOutputStream(Entities.Config.SERVERS_NET_FILE,false));
-
             server.usersOnlineInNet = new LinkedHashSet<>();
             if (new File(Config.CHAT_HISTORY_FILE).exists())
                 try {
@@ -62,6 +42,7 @@ public class Server implements ServerDataControl, ServerMessageListener, ClientD
                 new File(Config.CHAT_HISTORY_FILE).createNewFile();
                 server.chatHistory = new ArrayList<>();
             }
+
 
             if (new File(Config.REGISTERED_USERS_FILE).exists())
                 server.registeredUsers = (HashMap<String, String>) server.xStream.fromXML(new FileInputStream(Config.REGISTERED_USERS_FILE));
@@ -100,12 +81,7 @@ public class Server implements ServerDataControl, ServerMessageListener, ClientD
                 try {
                     String type = server.xStream.fromXML(client.getInputStream()).toString(); //тип - сервер или клиент
                     if (type.toUpperCase().equals("SERVER")) isServer = true;
-//                for (ServerPortIP entry : server.serversNetList) {
-//                    if (entry.ip.equals(client.getInetAddress().toString())) {
-//                        isServer = true;
-//                        break;
-//                    }
-//                }
+
                     if (isServer) {
                         ServerNetServiceThread serverNetService = new ServerNetServiceThread(client);
                         server.serverNetServiceThreads.add(serverNetService);
@@ -214,13 +190,22 @@ public class Server implements ServerDataControl, ServerMessageListener, ClientD
 
     @Override
     public boolean broadcast(ServerMessage message) {   //false if loop
-        if (!chatHistory.contains(message)) {
+        if(message.getMessage().getFrom().equals("SERVER")){
+            if(!serverNotificationsHistory.contains(message)){
+                serverNotificationsHistory.add(message);
+                System.out.println("[" + message.getMessage().getFrom() + "]: " + message.getMessage().getMessage());
+                for (ServiceMessageSender thread : clientServiceThreads) thread.sendMessage(message);
+                for (ServiceMessageSender thread : serverNetServiceThreads) thread.sendMessage(message);
+                return true;
+            }
+        }
+        else if (!chatHistory.contains(message)) {
             addMessage(message);
             System.out.println("[" + message.getMessage().getFrom() + "]: " + message.getMessage().getMessage());
             for (ServiceMessageSender thread : clientServiceThreads) thread.sendMessage(message);
             for (ServiceMessageSender thread : serverNetServiceThreads) thread.sendMessage(message);
             return true;
-        } else return false;
+        } return false;
     }
 
 //    @Override
