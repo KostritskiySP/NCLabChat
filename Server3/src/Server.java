@@ -198,7 +198,7 @@ public class Server implements ServerDataControl, ServerMessageListener, ClientD
 
     @Override
     public String authorization(Account account) {
-        if (!account.login.equals("") || registeredUsers.containsKey(account.login)) {
+        if (!account.login.equals("") && registeredUsers.containsKey(account.login)) {
             if (!account.password.equals("")) {
                 if (registeredUsers.get(account.login).equals(account.password)) {
                     for(ClientServiceThread thread : clientServiceThreads){

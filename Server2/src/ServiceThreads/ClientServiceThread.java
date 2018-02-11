@@ -116,7 +116,7 @@ public class ClientServiceThread extends Thread implements ServiceMessageSender 
             readyToSendLock.lock();
             inputStream = new BufferedInputStream(socket.getInputStream());
             outputStream = new BufferedOutputStream(socket.getOutputStream());
-            xStream.toXML(new Message("Notification", "#Welcome to server! Please authorize or register."), outputStream);
+       //     xStream.toXML(new Message("Notification", "#Welcome to server! Please authorize or register."), outputStream);
 //            stateResponse = xStream.fromXML(inputStream).toString();
             authorization();
             if (isActive) {
@@ -139,6 +139,8 @@ public class ClientServiceThread extends Thread implements ServiceMessageSender 
                     }
                 }
             }
+        } catch (XStreamException e) {
+
         } catch (SocketException e) {
             e.printStackTrace();
         } catch (IOException e) {
