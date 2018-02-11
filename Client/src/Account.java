@@ -10,4 +10,8 @@ public class Account {
         this.password = password;
     }
 
+    public String getLogin(){
+        return login;
+    }
+
 }

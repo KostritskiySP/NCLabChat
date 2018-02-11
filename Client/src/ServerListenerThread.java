@@ -1,7 +1,9 @@
 import java.io.*;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.ArrayList;
 import com.thoughtworks.xstream.*;
+import com.thoughtworks.xstream.io.StreamException;
 import com.thoughtworks.xstream.io.xml.Xpp3Driver;
 import Entities.Account;
 import Entities.Message;
@@ -27,30 +29,32 @@ public class ServerListenerThread implements ConnectToClient {
         this.outputStream = outputStream;
     }
 
-    /**
-     * Вывод данных от сервера
-     */
 
-    public void printMessage() {
+    public void startThread(ConnectionListener listener) {
         thread = new Thread(new Runnable() {
             @Override
             public void run() {
-                   while (!thread.isInterrupted()) {
-                               messageIn = receiptMessage();
-                               if (messageIn.getFrom().equals("Server"))
-                                   System.out.println("SERVER : " + messageIn.getMessage());
-                               else System.out.println("[ " + messageIn.getFrom() + " ] : " + messageIn.getMessage());
-                   }
+                while (!thread.isInterrupted()) {
+                    messageIn = receiptMessage();
+                    if ((messageIn.getFrom().equals("Server"))&& (messageIn.getMessage().equals("#Online"))){
+                        try {
+                            listener.onlineUsers(ServerListenerThread.this, getOnlineUser());
+                        }catch (InterruptedException ex){
+                        }
+                    }else {
+                        listener.onReceiveMessage(ServerListenerThread.this, messageIn);
+                    }
+                }
             }
 
         });
         thread.start();
     }
 
+
     /**
      * Получение сообщения ст сервера
      */
-
     public Message receiptMessage() {
         messageIn1 = (Message) xStream.fromXML(inputStream);
         if ((messageIn1.getFrom().equals("Server"))&& (messageIn1.getMessage().equals("#Online")))
@@ -75,17 +79,22 @@ public class ServerListenerThread implements ConnectToClient {
 
     public void logOut() throws IOException {
         send("!logout");
-        thread.interrupt();//!!!!!!!!!!!!!!!
+        thread.interrupt();
     }
 
     /**
      *  Отсоединение пользователя, если закрыто приложение
      */
 
-    public void disconnect() throws IOException {
-        send("!disconnect");
-        thread.interrupt();//!!!!!!!!!!!!!!!
-        socket.close();
+    public void disconnect()  {
+        try {
+            send("!disconnect");
+            thread = null;
+            xStream = null;
+            socket.close();
+        }catch (IOException | StreamException error){
+            System.out.println("Тут");
+        }
     }
 
     /**
@@ -101,26 +110,28 @@ public class ServerListenerThread implements ConnectToClient {
      *  @param login - логин пользователя
      *  @param password - пароль пользователя
      */
-
     public boolean authorization(String login, String password) throws  IOException {
         boolean check = false;
-        send("!Authorize");
+        send("!AUTHORIZE");
         Account account = new Account(login, password);
 //        try {
 //            thread.sleep(10);
-            xStream.fromXML(inputStream);
-            xStream.toXML(account,outputStream);
-            Message answer = (Message) xStream.fromXML(inputStream);
-            send("!OK");
-            if (answer.getMessage().equals("#Success"))
-                check = true;
-            else  check = false;
+        xStream.fromXML(inputStream);
+        xStream.toXML(account,outputStream);
+        Message answer = (Message) xStream.fromXML(inputStream);
+        System.out.println(answer.getMessage());
+        send("!OK");
+        if (answer.getMessage().equals("#Success"))
+            check = true;
+        else  check = false;
 //        }
 //        catch (InterruptedException e) {
 //            e.printStackTrace();
 //        }
         return check;
     }
+
+
 
     /**
      *  Регистрация пользователя
@@ -132,21 +143,18 @@ public class ServerListenerThread implements ConnectToClient {
         String answer = "";
         send("!REGISTRATION");
         Account account = new Account(login, password);
-        try {
-            thread.sleep(10);
+        System.out.println(login + password);
+//        try {
+//            thread.sleep(10);
             Message message = (Message) xStream.fromXML(inputStream);
             xStream.toXML(account,outputStream);
             message = (Message) xStream.fromXML(inputStream);
-            if (message.getMessage().equals("#Success"))
-                answer = "#Success";
-            else if (message.getMessage().equals("#incorrectPassword"))
-                answer = "#incorrectPassword";
-            else if (message.getMessage().equals("#alreadyRegistered"))
-                answer = "#alreadyRegistered";
-        }
-        catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+            System.out.println(message.getMessage());
+            answer = message.getMessage();
+//        }
+//        catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
         return answer;
     }
 
@@ -167,6 +175,7 @@ public class ServerListenerThread implements ConnectToClient {
     public ArrayList<String> getOnlineUser()throws InterruptedException{
         send("!online");
         Thread.sleep(100);
+        send("!OK");
         return onlineList;
     }
     /**

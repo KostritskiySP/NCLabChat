@@ -1,15 +1,10 @@
 <component name="libraryTable">
   <library name="xstream-hibernate">
     <CLASSES>
-      <root url="file://C:/Program Files/Java/lib/xstream-hibernate" />
-      <root url="file://C:/Games/xstream-distribution-1.4.10-bin/xstream-1.4.10/lib" />
+      <root url="file://$PROJECT_DIR$/../xstream-distribution-1.4.10-bin/xstream-1.4.10/lib/xstream-hibernate" />
     </CLASSES>
     <JAVADOC />
-    <SOURCES>
-      <root url="file://C:/Games/xstream-distribution-1.4.10-bin/xstream-1.4.10/lib" />
-    </SOURCES>
-    <jarDirectory url="file://C:/Games/xstream-distribution-1.4.10-bin/xstream-1.4.10/lib" recursive="false" />
-    <jarDirectory url="file://C:/Program Files/Java/lib/xstream-hibernate" recursive="false" />
-    <jarDirectory url="file://C:/Games/xstream-distribution-1.4.10-bin/xstream-1.4.10/lib" recursive="false" type="SOURCES" />
+    <SOURCES />
+    <jarDirectory url="file://$PROJECT_DIR$/../xstream-distribution-1.4.10-bin/xstream-1.4.10/lib/xstream-hibernate" recursive="false" />
   </library>
 </component>

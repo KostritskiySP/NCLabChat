@@ -5,10 +5,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 public interface ConnectToClient {
+
     /**
-     * Вывод данных от сервера
+     * Запуск потока
      */
-    void printMessage();
+    void startThread(ConnectionListener listener);
+
     /**
      * Получение сообщения ст сервера
      */

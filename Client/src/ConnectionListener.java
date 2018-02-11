@@ -1,10 +1,11 @@
+import java.util.ArrayList;
 public interface ConnectionListener {
 
     void onConnectionReady(ServerListenerThread tcpConnection);
 
-    void onReceiveMessage(ServerListenerThread сonnect, Message message);
+    void onReceiveMessage(ServerListenerThread сonnect, Entities.Message message);
 
-    void onDisconnect(ServerListenerThread сonnect);
+    void onlineUsers(ServerListenerThread сonnect, ArrayList<String> onlineList);
 
     void onException(ServerListenerThread сonnect, Exception e);
 
