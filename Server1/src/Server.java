@@ -11,7 +11,7 @@ import java.net.SocketException;
 import java.util.*;
 
 public class Server implements ServerDataControl, ServerMessageListener, ClientDisconnectionListener,
-        ServersDisconnectionListener, NetClientListener,ServerManagementController {
+        ServersDisconnectionListener, NetClientListener,ServerManagementController,RegistrationListener {
 
     private ArrayList<ClientServiceThread> clientServiceThreads = new ArrayList<ClientServiceThread>();
     private ArrayList<ServerNetServiceThread> serverNetServiceThreads = new ArrayList<ServerNetServiceThread>();
@@ -68,6 +68,7 @@ public class Server implements ServerDataControl, ServerMessageListener, ClientD
                     serverNetService.addServerMessageListener(server);
                     serverNetService.addServersDisconnectionListener(server);
                     serverNetService.addNetClientListener(server);
+                    serverNetService.addRegistrationListener(server);
                     server.xStream.toXML("SERVER", socket.getOutputStream());
                     System.out.println("connected to another Server");
                     serverNetService.start();
@@ -88,6 +89,7 @@ public class Server implements ServerDataControl, ServerMessageListener, ClientD
                         serverNetService.addServerMessageListener(server);
                         serverNetService.addServersDisconnectionListener(server);
                         serverNetService.addNetClientListener(server);
+                        serverNetService.addRegistrationListener(server);
                         System.out.println("Server connected");
                         serverNetService.start();
                     } else {
@@ -149,6 +151,7 @@ public class Server implements ServerDataControl, ServerMessageListener, ClientD
     }
 
 
+    @Override
     public void addRegisteredUser(String login, String password) {
         registeredUsers.put(login, password);
         try {
@@ -164,6 +167,11 @@ public class Server implements ServerDataControl, ServerMessageListener, ClientD
                 && !registeredUsers.containsKey(account.login)) {
             if (!account.password.equals("")) {
                 addRegisteredUser(account.login, account.password);
+                for (ServiceMessageSender thread : serverNetServiceThreads) {
+                    ServerMessage regMessage=new ServerMessage("SERVER", "REGISTRATION:" + account.login + ":PASSWORD:" + account.password);
+                    serverNotificationsHistory.add(regMessage);
+                    thread.sendMessage(regMessage);
+                }
                 return "#Success";
             } else
                 return "#incorrectPassword";
@@ -181,6 +189,8 @@ public class Server implements ServerDataControl, ServerMessageListener, ClientD
                         if(thread.getLogin()!=null && thread.getLogin().equals(account.login))
                             return "#UserAlreadyConnected";
                     }
+                    if(usersOnlineInNet.contains(account.login))
+                        return "#UserAlreadyConnected";
                     return "#Success";
                 } else return "#passwordIncorrect";
             } else return "#emptyPassword";

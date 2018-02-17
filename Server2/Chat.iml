@@ -7,10 +7,8 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="lib" level="project" />
-    <orderEntry type="library" name="xstream" level="project" />
-    <orderEntry type="library" name="lib1" level="project" />
-    <orderEntry type="library" name="xstream1" level="project" />
+    <orderEntry type="library" exported="" name="lib" level="project" />
+    <orderEntry type="library" exported="" name="xstream" level="project" />
     <orderEntry type="library" name="xstream-hibernate" level="project" />
     <orderEntry type="library" name="xstream-1.4.10" level="project" />
     <orderEntry type="library" name="stax-1.2.0" level="project" />

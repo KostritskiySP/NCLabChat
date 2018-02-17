@@ -19,6 +19,7 @@ public class ServerNetServiceThread extends Thread implements ServiceMessageSend
     private ServerMessageListener messageListener;
     private ServersDisconnectionListener serversDisconnectionListener;
     private NetClientListener netClientListener;
+    private RegistrationListener registrationListener;
     private boolean isActive;
 
 //    private ServerDataControl serverData;
@@ -41,9 +42,7 @@ public class ServerNetServiceThread extends Thread implements ServiceMessageSend
         this.netClientListener = ncdl;
     }
 
-//    public void addServerDataControl(ServerDataControl sdk) {
-//        this.serverData = sdk;
-//    }
+    public void addRegistrationListener(RegistrationListener rl){this.registrationListener = rl;}
 
 
     public void run() {
@@ -55,12 +54,17 @@ public class ServerNetServiceThread extends Thread implements ServiceMessageSend
                 if (messageListener.broadcast(mes)) {
                     if (mes.getMessage().getFrom().toUpperCase().equals("SERVER")) {         //check if command
                         String command = mes.getMessage().getMessage();
-                        if (command.length()>=12  && command.substring(0, 12).equals("disconnected")) {     //check for disconnection message
+                        if(command.startsWith("REGISTRATION:")){
+                            command = command.substring(13,command.length());
+                            String[] accData = command.split(":PASSWORD:");
+                            registrationListener.addRegisteredUser(accData[0],accData[1]);
+                        }
+                        if(command.startsWith("disconnected")) {     //check for disconnection message
                             String login = command.substring(13, command.length());
                             netClientListener.netClientDisconnected(login);
                             System.out.println(command);
                         }
-                        if (command.length()>=9  && command.substring(0, 9).equals("connected")){
+                        if (command.startsWith("connected")) {
                             String login = command.substring(10, command.length());
                             netClientListener.netClientConnected(login);
                             System.out.println(command);
