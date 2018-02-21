@@ -1,0 +1,17 @@
+C:\NC\Chat\NCLabChat\Server1\src\main\java\Server.java
+C:\NC\Chat\NCLabChat\Server1\src\main\java\ServiceThreads\ClientDisconnectionListener.java
+C:\NC\Chat\NCLabChat\Server1\src\main\java\ServiceThreads\RegistrationListener.java
+C:\NC\Chat\NCLabChat\Server1\src\main\java\ServiceThreads\ServerMessageListener.java
+C:\NC\Chat\NCLabChat\Server1\src\main\java\ServiceThreads\ServerNetServiceThread.java
+C:\NC\Chat\NCLabChat\Server1\src\main\java\ServiceThreads\ServerDataControl.java
+C:\NC\Chat\NCLabChat\Server1\src\main\java\Entities\Account.java
+C:\NC\Chat\NCLabChat\Server1\src\main\java\ServiceThreads\ServerManagementThread.java
+C:\NC\Chat\NCLabChat\Server1\src\main\java\Entities\Config.java
+C:\NC\Chat\NCLabChat\Server1\src\main\java\ServiceThreads\NetClientListener.java
+C:\NC\Chat\NCLabChat\Server1\src\main\java\ServiceThreads\ServersDisconnectionListener.java
+C:\NC\Chat\NCLabChat\Server1\src\main\java\Entities\Message.java
+C:\NC\Chat\NCLabChat\Server1\src\main\java\ServiceThreads\ClientServiceThread.java
+C:\NC\Chat\NCLabChat\Server1\src\main\java\ServiceThreads\ServiceMessageSender.java
+C:\NC\Chat\NCLabChat\Server1\src\main\java\ServiceThreads\ServerManagementController.java
+C:\NC\Chat\NCLabChat\Server1\src\main\java\Entities\ServerMessage.java
+C:\NC\Chat\NCLabChat\Server1\src\main\java\Entities\ServerPortIP.java

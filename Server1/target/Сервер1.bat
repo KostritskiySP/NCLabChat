@@ -1,0 +1,1 @@
+java -jar Chat-1.0-shaded.jar
